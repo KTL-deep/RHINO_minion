@@ -200,14 +200,15 @@ internal static class RhinoToolExecutor
         var attributes = new ObjectAttributes { Name = name ?? string.Empty };
         if (!string.IsNullOrWhiteSpace(layerPath))
         {
-            var layerIndex = document.Layers.FindByFullPath(layerPath, -1);
+            var requestedLayer = layerPath!;
+            var layerIndex = document.Layers.FindByFullPath(requestedLayer, -1);
             if (layerIndex < 0)
             {
-                layerIndex = document.Layers.Add(new Layer { Name = layerPath.Replace("::", "_") });
+                layerIndex = document.Layers.Add(new Layer { Name = requestedLayer.Replace("::", "_") });
             }
             if (layerIndex < 0)
             {
-                throw new ToolException(ErrorCode.GeometryFailed, $"Could not create layer {layerPath}.");
+                throw new ToolException(ErrorCode.GeometryFailed, $"Could not create layer {requestedLayer}.");
             }
             attributes.LayerIndex = layerIndex;
         }

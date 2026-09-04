@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-
 from rhino_minion.main import app
 
 

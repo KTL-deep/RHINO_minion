@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from fastapi import WebSocket
 
-from rhino_minion.models import BridgeRequest, BridgeResponse, PROTOCOL_VERSION
+from rhino_minion.models import PROTOCOL_VERSION, BridgeRequest, BridgeResponse
 
 
 @dataclass

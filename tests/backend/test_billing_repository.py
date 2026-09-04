@@ -10,7 +10,7 @@ def test_settlement_and_consumption_are_idempotent(tmp_path) -> None:
         id="order-1",
         user_id="user-1",
         product="credits_100",
-        amount=Decimal("500"),
+        amount=Decimal(500),
         currency="RUB",
         credits=100,
         status=OrderStatus.CREATED,

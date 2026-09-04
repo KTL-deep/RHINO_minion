@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
@@ -11,7 +11,7 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class ErrorCode(str, Enum):
+class ErrorCode(StrEnum):
     INVALID_ARGUMENT = "INVALID_ARGUMENT"
     OBJECT_NOT_FOUND = "OBJECT_NOT_FOUND"
     GEOMETRY_FAILED = "GEOMETRY_FAILED"

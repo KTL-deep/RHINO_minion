@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+const DEFAULT_API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8766" : "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE;
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {

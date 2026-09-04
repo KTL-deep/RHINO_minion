@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,6 +18,7 @@ from rhino_minion.billing.repository import BillingRepository
 from rhino_minion.billing.yookassa import YooKassaClient, YooKassaError
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
+AuthenticatedUser = Annotated[CurrentUser, Depends(require_user)]
 
 
 @lru_cache(maxsize=1)
@@ -28,7 +29,7 @@ def repository() -> BillingRepository:
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout(
     request: CheckoutRequest,
-    user: CurrentUser = Depends(require_user),
+    user: AuthenticatedUser,
 ) -> CheckoutResponse:
     product = get_product(request.product)
     if product is None:
@@ -73,7 +74,7 @@ async def create_checkout(
 
 
 @router.get("/entitlements", response_model=EntitlementResponse)
-def entitlements(user: CurrentUser = Depends(require_user)) -> EntitlementResponse:
+def entitlements(user: AuthenticatedUser) -> EntitlementResponse:
     return EntitlementResponse(user_id=user.id, credits=repository().credit_balance(user.id))
 
 

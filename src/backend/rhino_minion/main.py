@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -7,22 +7,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from rhino_minion.auth import CurrentUser, generation_user
-from rhino_minion.billing.routes import repository, router as billing_router
+from rhino_minion.billing.routes import repository
+from rhino_minion.billing.routes import router as billing_router
 from rhino_minion.bridge import RhinoConnection, registry
 from rhino_minion.config import settings
-from rhino_minion.models import BridgeRequest, BridgeResponse, HealthResponse, PROTOCOL_VERSION
+from rhino_minion.models import PROTOCOL_VERSION, BridgeRequest, BridgeResponse, HealthResponse
 from rhino_minion.planning import PlanningError, get_planner
 from rhino_minion.planning.models import PromptResult
 
 app = FastAPI(title="RHINO Minion Backend", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173", "null"],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
 )
 app.include_router(billing_router)
+GenerationUser = Annotated[CurrentUser, Depends(generation_user)]
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -61,7 +63,7 @@ async def execute(session_id: UUID, command: ExecuteRequest) -> BridgeResponse:
 async def prompt(
     session_id: UUID,
     request: PromptRequest,
-    user: CurrentUser = Depends(generation_user),
+    user: GenerationUser,
 ) -> PromptResult:
     text = request.prompt.strip()
     if not text or len(text) > 4000:

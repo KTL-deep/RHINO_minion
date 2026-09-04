@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Annotated, Any
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -9,6 +9,7 @@ from jwt import PyJWKClient
 from rhino_minion.config import settings
 
 bearer = HTTPBearer(auto_error=False)
+BearerCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]
 
 
 @dataclass(frozen=True)
@@ -19,7 +20,7 @@ class CurrentUser:
 
 
 def require_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    credentials: BearerCredentials,
 ) -> CurrentUser:
     if not settings.auth_enabled:
         raise HTTPException(
@@ -30,7 +31,7 @@ def require_user(
 
 
 def generation_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    credentials: BearerCredentials,
 ) -> CurrentUser:
     if not settings.auth_enabled:
         return CurrentUser(id="local-development", email=None, claims={})

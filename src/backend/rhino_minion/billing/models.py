@@ -1,12 +1,12 @@
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import Field
 
 from rhino_minion.models import StrictModel
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     CREATED = "created"
     PENDING = "pending"
     SUCCEEDED = "succeeded"

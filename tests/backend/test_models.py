@@ -1,6 +1,5 @@
 import pytest
 from pydantic import ValidationError
-
 from rhino_minion.models import BridgeResponse
 
 

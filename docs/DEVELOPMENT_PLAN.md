@@ -341,6 +341,7 @@ Planner не должен выдумывать GUID, единицы или ре�
 - короткоживущий access token и ротация refresh token;
 - облачный entitlement service для планов Free/Trial/Pro и credit packs;
 - hosted checkout и customer portal платёжного провайдера;
+- отдельный web-сайт для входа, покупки и управления подпиской; desktop остаётся интерфейсом чата и при отсутствии entitlement перенаправляет пользователя на сайт;
 - webhook-обработка оплаты с проверкой подписи и идемпотентностью;
 - usage ledger, квоты, rate limits и защита от параллельного перерасхода;
 - AI gateway, который хранит OpenAI API key только на сервере;
