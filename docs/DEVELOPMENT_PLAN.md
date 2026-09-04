@@ -84,6 +84,14 @@ Python backend (FastAPI / Pydantic)
 ├── Tool-call executor loop
 ├── LLM provider adapter
 └── Audit log
+
+Cloud control plane (production)
+├── User authentication / sessions
+├── Billing and subscriptions
+├── Entitlements and usage ledger
+├── AI generation gateway
+├── Rate limits and abuse controls
+└── Server-side provider secrets
 ```
 
 Для первого вертикального прототипа UI и LLM могут быть заменены консольным тестовым клиентом. Это позволит проверить Rhino bridge независимо от модели и интерфейса.
@@ -324,6 +332,23 @@ Planner не должен выдумывать GUID, единицы или ре�
 
 Критерий готовности: пилотный пользователь может установить продукт и выполнить основные сценарии без участия разработчика.
 
+### Этап 6 — авторизация, подписки и коммерческий gateway
+
+Результат:
+
+- аккаунт RHINO Minion через стандартный OIDC/OAuth-провайдер;
+- безопасный вход desktop/frontend через Authorization Code + PKCE;
+- короткоживущий access token и ротация refresh token;
+- облачный entitlement service для планов Free/Trial/Pro и credit packs;
+- hosted checkout и customer portal платёжного провайдера;
+- webhook-обработка оплаты с проверкой подписи и идемпотентностью;
+- usage ledger, квоты, rate limits и защита от параллельного перерасхода;
+- AI gateway, который хранит OpenAI API key только на сервере;
+- опциональный BYOK-режим с зашифрованным пользовательским API key;
+- удалённый logout/revoke и минимальный audit trail.
+
+Критерий готовности: пользователь входит в RHINO Minion, покупает план или пакет кредитов, entitlement обновляется через подписанный webhook, а генерация выполняется без передачи provider key во frontend, Rhino plugin или локальные логи.
+
 ## 10. Последующие версии
 
 ### V1 — AI editing
@@ -494,5 +519,8 @@ V0 считается завершённой, когда:
 - Первый поддерживаемый LLM provider и формат конфигурации ключа.
 - Лицензия проекта и стратегия распространения плагина.
 - Нужна ли работа полностью локально или допустима передача scene metadata облачной модели.
+- Провайдер identity/OIDC, платёжный провайдер, юридическое лицо и поддерживаемые страны продаж.
+- Тарифы RHINO Minion, единица внутреннего кредита, лимиты и политика возвратов.
+- Разрешён ли BYOK и где хранится зашифрованный пользовательский provider key.
 
 Эти решения не блокируют создание структуры и протокольных DTO, но должны быть приняты до завершения Rhino bridge и подключения реального LLM.

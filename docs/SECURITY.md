@@ -13,7 +13,19 @@ LLM и backend считаются недоверенными источника�
 - Не выполнять Python, C#, shell-команды или динамически загруженные сборки.
 - Не читать и не отправлять произвольные локальные файлы.
 - Не хранить секреты в git или логах.
+- Никогда не отдавать OpenAI API key во frontend, Rhino plugin или desktop bundle.
+- Не генерировать и не показывать пользователю OpenAI project key от имени RHINO Minion.
 - Не отправлять полную геометрию в LLM без явного пользовательского действия.
+
+## Production authentication
+
+- Использовать Authorization Code Flow с PKCE и системный браузер, а не форму пароля внутри Rhino.
+- Access token должен быть короткоживущим; refresh token хранится в Windows Credential Manager/macOS Keychain.
+- Локальный backend принимает только токен текущей desktop-сессии и loopback-запросы.
+- Entitlement проверяется облачным gateway до каждого платного generation job.
+- Billing webhook проверяется по подписи, event ID и обрабатывается идемпотентно.
+- Денежный платёж и начисление внутренних кредитов фиксируются отдельными неизменяемыми ledger entries.
+- Общий provider key хранится в cloud secret manager и используется только AI gateway.
 
 ## Сообщение об уязвимости
 

@@ -32,3 +32,27 @@ export function executeRhinoCommand(sessionId, type, payload, signal) {
     body: JSON.stringify({ type, payload })
   });
 }
+
+export function sendPrompt(sessionId, prompt, accessToken, signal) {
+  return apiRequest(`/api/sessions/${encodeURIComponent(sessionId)}/prompt`, {
+    method: "POST",
+    signal,
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    body: JSON.stringify({ prompt })
+  });
+}
+
+export function getEntitlements(accessToken, signal) {
+  return apiRequest("/api/billing/entitlements", {
+    signal,
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+}
+
+export function createCheckout(accessToken, product = "credits_100") {
+  return apiRequest("/api/billing/checkout", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ product })
+  });
+}

@@ -30,6 +30,16 @@ AI-ассистент для управляемого создания и ред
 
 Проверка: `GET http://127.0.0.1:8766/health`.
 
+Planner по умолчанию работает локально и распознаёт безопасный box-запрос вида `Create a box 30 × 20 × 80 m`. Для свободных архитектурных промптов задайте в `.env`:
+
+```dotenv
+RHINO_MINION_PLANNER=openai
+RHINO_MINION_OPENAI_API_KEY=...
+RHINO_MINION_OPENAI_MODEL=...
+```
+
+Название модели задаётся явно: проект не подменяет его автоматически. Геометрический план проходит локальную проверку и только затем отправляется в Rhino bridge.
+
 Собранный плагин имеет расширение `.rhp`. Он регистрирует команду `RhinoMinion` и автоматически подключается к `ws://127.0.0.1:8766/ws/rhino`.
 
 После запуска backend и загрузки плагина:
@@ -60,6 +70,16 @@ scripts/                   bootstrap/build/test
 ```
 
 Подробный план: [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md).
+
+Коммерческая авторизация и биллинг: [docs/AUTH_AND_BILLING.md](docs/AUTH_AND_BILLING.md). Подписка ChatGPT не является API entitlement; production-генерация должна идти через облачный RHINO Minion gateway с серверным ключом и собственными планами/кредитами продукта.
+
+Текущая auth/payment-интеграция использует self-hosted Keycloak и ЮKassa. Локальный Keycloak запускается так:
+
+```powershell
+docker compose --env-file .env -f infra/keycloak/docker-compose.yml up -d
+```
+
+Для checkout необходимо включить auth, указать тестовые `shop_id`/`secret_key` ЮKassa и задать цену `RHINO_MINION_CREDITS_100_PRICE_RUB`. Без положительной серверной цены товар недоступен.
 
 ## Конфигурация
 

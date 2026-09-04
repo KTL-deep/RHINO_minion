@@ -34,3 +34,9 @@ coverage/
 # Frontend
 node_modules/
 RHINO_minion_frontend/dist/
+
+# Local application state
+data/
+*.db
+*.db-shm
+*.db-wal

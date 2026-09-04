@@ -13,7 +13,15 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { executeRhinoCommand, getHealth, getSessions } from "./api";
+import {
+  createCheckout,
+  executeRhinoCommand,
+  getEntitlements,
+  getHealth,
+  getSessions,
+  sendPrompt
+} from "./api";
+import { completeSignIn, signIn, signOut } from "./auth";
 
 function RhinoMark({ compact = false }) {
   return (
@@ -80,12 +88,37 @@ export function App() {
   const [scene, setScene] = useState(null);
   const [prompt, setPrompt] = useState(DEMO_PROMPT);
   const [busy, setBusy] = useState(false);
+  const [lastPlan, setLastPlan] = useState(null);
+  const [authUser, setAuthUser] = useState(null);
+  const [credits, setCredits] = useState(null);
   const [notice, setNotice] = useState({ type: "idle", message: "Waiting for Rhino" });
 
   const activeSession = useMemo(
     () => sessions.find((session) => session.session_id === sessionId),
     [sessions, sessionId]
   );
+
+  useEffect(() => {
+    completeSignIn()
+      .then((user) => setAuthUser(user && !user.expired ? user : null))
+      .catch((error) => setNotice({ type: "error", message: `Login failed: ${error.message}` }));
+  }, []);
+
+  useEffect(() => {
+    if (!authUser?.access_token) {
+      setCredits(null);
+      return;
+    }
+    const controller = new AbortController();
+    getEntitlements(authUser.access_token, controller.signal)
+      .then((result) => setCredits(result.credits))
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setNotice({ type: "error", message: `Account: ${error.message}` });
+        }
+      });
+    return () => controller.abort();
+  }, [authUser]);
 
   const refreshConnections = useCallback(async (signal) => {
     try {
@@ -182,13 +215,41 @@ export function App() {
     }
   }, [busy, sessionId]);
 
-  const submitPrompt = (event) => {
+  const submitPrompt = async (event) => {
     event.preventDefault();
-    if (prompt.trim().toLowerCase() !== DEMO_PROMPT.toLowerCase()) {
-      setNotice({ type: "idle", message: "Free-form AI prompts arrive in the next stage. Use the demo prompt for now." });
+    if (!sessionId || busy || !prompt.trim()) return;
+    setBusy(true);
+    setNotice({ type: "working", message: "Planning and executing geometry…" });
+    try {
+      const result = await sendPrompt(sessionId, prompt.trim(), authUser?.access_token);
+      setLastPlan(result.plan);
+      const updatedScene = await executeRhinoCommand(sessionId, "get_scene", { max_objects: 500 });
+      if (updatedScene.ok) setScene(updatedScene.result);
+      const operationCount = result.plan.operations.length;
+      setNotice({
+        type: "success",
+        message: `${result.message} · ${operationCount} operation${operationCount === 1 ? "" : "s"}`
+      });
+    } catch (error) {
+      setNotice({ type: "error", message: error.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const buyCredits = async () => {
+    if (!authUser?.access_token) {
+      await signIn();
       return;
     }
-    createDemoBox();
+    setBusy(true);
+    try {
+      const checkout = await createCheckout(authUser.access_token);
+      window.location.assign(checkout.confirmation_url);
+    } catch (error) {
+      setNotice({ type: "error", message: `Payment: ${error.message}` });
+      setBusy(false);
+    }
   };
 
   return (
@@ -205,9 +266,14 @@ export function App() {
           <a href="#about">About</a>
         </nav>
 
-        <button className="ghost-button" onClick={() => document.querySelector("#product")?.scrollIntoView()}>
-          Launch app <ArrowUpRight size={16} />
-        </button>
+        <div className="header-actions">
+          <button className="account-button" onClick={() => authUser ? signOut() : signIn()}>
+            {authUser ? (authUser.profile.email ?? "Sign out") : "Sign in"}
+          </button>
+          <button className="ghost-button" onClick={() => document.querySelector("#product")?.scrollIntoView()}>
+            Launch app <ArrowUpRight size={16} />
+          </button>
+        </div>
       </header>
 
       <section className="hero">
@@ -308,9 +374,25 @@ export function App() {
           </form>
 
           <div className="scene-summary">
-            <span>{scene ? summarizeScene(scene) : "Scene not loaded"}</span>
-            <button onClick={createDemoBox} disabled={!sessionId || busy}>Create demo mass</button>
+            <span>
+              {scene ? summarizeScene(scene) : "Scene not loaded"}
+              {credits !== null ? ` · ${credits} credits` : ""}
+            </span>
+            <span className="scene-actions">
+              <button onClick={buyCredits} disabled={busy}>Buy credits</button>
+              <button onClick={createDemoBox} disabled={!sessionId || busy}>Create demo mass</button>
+            </span>
           </div>
+          {lastPlan && (
+            <div className="plan-summary">
+              <strong>Last plan</strong>
+              {lastPlan.operations.length ? (
+                <span>{lastPlan.operations.map((operation) => operation.tool).join(" → ")}</span>
+              ) : (
+                <span>No geometry operations</span>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
