@@ -21,28 +21,101 @@ class Planner(ABC):
 
 
 class DeterministicPlanner(Planner):
-    """Offline fallback for an explicit rectangular box request."""
+    """Offline Russian/English fallback for basic creation and selected edits."""
 
     _dimensions = re.compile(
-        r"(?P<a>\d+(?:[.,]\d+)?)\s*[x×х]\s*"
-        r"(?P<b>\d+(?:[.,]\d+)?)\s*[x×х]\s*"
+        r"(?P<a>\d+(?:[.,]\d+)?)\s*[xх×]\s*"
+        r"(?P<b>\d+(?:[.,]\d+)?)\s*[xх×]\s*"
         r"(?P<c>\d+(?:[.,]\d+)?)\s*(?P<unit>mm|cm|m|мм|см|м)?",
         re.IGNORECASE,
     )
+    _number_with_unit = re.compile(
+        r"(?P<value>\d+(?:[.,]\d+)?)\s*(?P<unit>mm|cm|m|мм|см|м)\b",
+        re.IGNORECASE,
+    )
+    _percent = re.compile(r"(?P<value>\d+(?:[.,]\d+)?)\s*%")
+    _degrees = re.compile(r"(?P<value>-?\d+(?:[.,]\d+)?)\s*(?:°|deg|град)", re.IGNORECASE)
 
     async def plan(self, prompt: str, scene: dict[str, Any]) -> GeometryPlan:
-        match = self._dimensions.search(prompt)
-        if match is None or not re.search(r"box|короб|объ[её]м|блок", prompt, re.IGNORECASE):
+        normalized = prompt.casefold()
+        dimensions = self._dimensions.search(prompt)
+        if dimensions is not None and re.search(
+            r"box|короб|объ[её]м|блок|параллелепипед|башн", normalized
+        ):
+            return self._create_box(dimensions, scene)
+
+        targets = _resolve_targets(prompt, scene)
+        if not targets:
             raise PlanningError(
-                "Local planner supports only box requests such as 'Create a box 30 × 20 × 80 m'. "
-                "Configure the OpenAI planner for free-form prompts."
+                "Выделите объект в Rhino и повторите команду. Локальный режим также понимает "
+                "создание блока, например: «Создай блок 30 × 20 × 80 м»."
             )
 
+        center = _target_center(targets)
+        ids = [str(item["id"]) for item in targets]
+
+        if re.search(r"перемест|сдвин|move", normalized):
+            distance = self._distance(prompt, scene)
+            axis_index = _axis_from_prompt(normalized)
+            vector = [0.0, 0.0, 0.0]
+            negative = re.search(r"вниз|назад|влево|negative|minus", normalized)
+            vector[axis_index] = -distance if negative else distance
+            return _transform_plan(
+                "Перемещаю выбранную геометрию.", ids, "move", vector=vector
+            )
+
+        if re.search(r"поверн|разверн|rotate", normalized):
+            degrees = self._degrees.search(prompt)
+            if degrees is None:
+                raise PlanningError("Укажите угол, например: «Поверни выбранное на 15°».")
+            angle = float(degrees.group("value").replace(",", "."))
+            axis = [0.0, 0.0, 1.0]
+            if re.search(r"вокруг\s*x|по\s*x", normalized):
+                axis = [1.0, 0.0, 0.0]
+            elif re.search(r"вокруг\s*y|по\s*y", normalized):
+                axis = [0.0, 1.0, 0.0]
+            return _transform_plan(
+                "Поворачиваю выбранную геометрию.",
+                ids,
+                "rotate",
+                center=center,
+                axis=axis,
+                angle_degrees=angle,
+            )
+
+        if re.search(r"увелич|уменьш|масштаб|шире|уже|выше|ниже|scale", normalized):
+            percent = self._percent.search(prompt)
+            if percent is None:
+                raise PlanningError("Укажите изменение, например: «Сделай на 20% выше».")
+            delta = float(percent.group("value").replace(",", ".")) / 100
+            shrinking = bool(re.search(r"уменьш|уже|ниже|меньше|shrink", normalized))
+            factor = 1 - delta if shrinking else 1 + delta
+            if factor <= 0:
+                raise PlanningError("Масштаб должен оставаться больше нуля.")
+            factors = [factor, factor, factor]
+            if re.search(r"выше|ниже|высот|по\s*z", normalized):
+                factors = [1.0, 1.0, factor]
+            elif re.search(r"шире|уже|тоньше|по\s*x", normalized):
+                factors = [factor, factor, 1.0]
+            return _transform_plan(
+                "Изменяю размеры выбранной геометрии.",
+                ids,
+                "scale_xyz",
+                center=center,
+                factors=factors,
+            )
+
+        raise PlanningError(
+            "Локальный режим понимает создание блока, перемещение, поворот и изменение "
+            "размера выбранного объекта. Для свободных запросов подключите AI planner."
+        )
+
+    def _create_box(self, match: re.Match[str], scene: dict[str, Any]) -> GeometryPlan:
         values = [float(match.group(key).replace(",", ".")) for key in ("a", "b", "c")]
         factor = _unit_factor(match.group("unit") or "m", str(scene.get("units", "")))
         dimensions = [value * factor for value in values]
         return GeometryPlan(
-            summary=f"Create a {values[0]:g} × {values[1]:g} × {values[2]:g} box.",
+            summary=f"Создаю блок {values[0]:g} × {values[1]:g} × {values[2]:g}.",
             operations=[
                 PlannedOperation(
                     operation_id="create-box-1",
@@ -58,6 +131,13 @@ class DeterministicPlanner(Planner):
                 )
             ],
         )
+
+    def _distance(self, prompt: str, scene: dict[str, Any]) -> float:
+        match = self._number_with_unit.search(prompt)
+        if match is None:
+            raise PlanningError("Укажите расстояние с единицей измерения, например 3 м.")
+        value = float(match.group("value").replace(",", "."))
+        return value * _unit_factor(match.group("unit"), str(scene.get("units", "")))
 
 
 class OpenAIPlanner(Planner):
@@ -111,6 +191,58 @@ def get_planner() -> Planner:
     if settings.planner == "openai":
         return OpenAIPlanner(settings.openai_api_key, settings.openai_model)
     raise PlanningError(f"Unknown planner: {settings.planner}")
+
+
+def _resolve_targets(prompt: str, scene: dict[str, Any]) -> list[dict[str, Any]]:
+    objects = [item for item in scene.get("objects", []) if isinstance(item, dict)]
+    selected = [item for item in objects if item.get("selected") is True]
+    if selected:
+        return selected
+    lowered = prompt.casefold()
+    named = [
+        item
+        for item in objects
+        if item.get("name") and str(item["name"]).casefold() in lowered
+    ]
+    if named:
+        return named
+    return objects if len(objects) == 1 else []
+
+
+def _target_center(targets: list[dict[str, Any]]) -> list[float]:
+    minima = [item.get("bbox", {}).get("min") for item in targets]
+    maxima = [item.get("bbox", {}).get("max") for item in targets]
+    if not all(isinstance(value, list) and len(value) == 3 for value in minima + maxima):
+        raise PlanningError("У выбранной геометрии нет корректного bounding box.")
+    return [
+        (
+            min(float(value[index]) for value in minima)
+            + max(float(value[index]) for value in maxima)
+        )
+        / 2
+        for index in range(3)
+    ]
+
+
+def _axis_from_prompt(prompt: str) -> int:
+    if re.search(r"вверх|вниз|по\s*z|ось\s*z", prompt):
+        return 2
+    if re.search(r"впер[её]д|назад|по\s*y|ось\s*y", prompt):
+        return 1
+    return 0
+
+
+def _transform_plan(summary: str, ids: list[str], kind: str, **arguments: Any) -> GeometryPlan:
+    return GeometryPlan(
+        summary=summary,
+        operations=[
+            PlannedOperation(
+                operation_id=f"{kind}-selected-1",
+                tool="transform",
+                arguments={"object_ids": ids, "kind": kind, "copy": False, **arguments},
+            )
+        ],
+    )
 
 
 def _response_output_text(payload: dict[str, Any]) -> str:

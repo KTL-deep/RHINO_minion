@@ -19,6 +19,7 @@ internal sealed class RhinoRequestDispatcher
         {
             var result = request.Type switch
             {
+                "get_capabilities" => RhinoToolExecutor.GetCapabilities(),
                 "get_scene" => await UiThread.InvokeAsync(
                     () => RhinoToolExecutor.GetScene(RhinoDoc.ActiveDoc, request.Payload),
                     cancellationToken).ConfigureAwait(false),

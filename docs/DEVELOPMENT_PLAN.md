@@ -352,6 +352,10 @@ Planner не должен выдумывать GUID, единицы или ре�
 
 ## 10. Последующие версии
 
+Полный перечень категорий Rhino и их текущий статус ведётся в
+[`RHINO_CAPABILITY_MATRIX.md`](RHINO_CAPABILITY_MATRIX.md). Приоритет до подключения
+свободного AI — расширить типизированный Rhino tool layer и runtime discovery возможностей.
+
 ### V1 — AI editing
 
 - delete, duplicate, group и layer tools;

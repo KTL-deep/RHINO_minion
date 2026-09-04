@@ -4,7 +4,25 @@ from pydantic import Field, model_validator
 
 from rhino_minion.models import StrictModel
 
-ALLOWED_TOOLS = {"create_box", "create_polyline", "extrude", "transform"}
+ALLOWED_TOOLS = {
+    "create_point",
+    "create_line",
+    "create_circle",
+    "create_arc",
+    "create_ellipse",
+    "create_rectangle",
+    "create_polygon",
+    "create_nurbs_curve",
+    "create_box",
+    "create_sphere",
+    "create_cylinder",
+    "create_polyline",
+    "extrude",
+    "transform",
+    "duplicate_objects",
+    "delete_objects",
+    "set_object_attributes",
+}
 
 
 class PlannedOperation(StrictModel):
