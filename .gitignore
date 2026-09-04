@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.rhp
+TestResults/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Configuration and secrets
+.env
+!.env.example
+
+# IDE and OS
+.idea/
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build output
+artifacts/
+dist/
+coverage/
+
+# Frontend
+node_modules/
+RHINO_minion_frontend/dist/

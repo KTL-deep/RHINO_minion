@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "extrude arguments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["curve_id", "height"],
+  "properties": {
+    "curve_id": { "type": "string", "format": "uuid" },
+    "height": { "type": "number", "not": { "const": 0 } },
+    "cap": { "type": "boolean", "default": false },
+    "delete_input": { "type": "boolean", "default": false },
+    "layer": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rhino-minion.local/schemas/protocol/error.schema.json",
+  "title": "Bridge error",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "message"],
+  "properties": {
+    "code": {
+      "enum": [
+        "INVALID_ARGUMENT",
+        "OBJECT_NOT_FOUND",
+        "GEOMETRY_FAILED",
+        "DOCUMENT_UNAVAILABLE",
+        "TIMEOUT",
+        "PROTOCOL_ERROR",
+        "INTERNAL_ERROR"
+      ]
+    },
+    "message": { "type": "string", "minLength": 1 },
+    "operation_id": { "type": ["string", "null"] },
+    "details": { "type": "object" }
+  }
+}

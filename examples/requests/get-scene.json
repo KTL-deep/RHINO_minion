@@ -1,0 +1,10 @@
+{
+  "protocol_version": "0.1",
+  "request_id": "33333333-3333-3333-3333-333333333333",
+  "session_id": "22222222-2222-2222-2222-222222222222",
+  "type": "get_scene",
+  "payload": {
+    "selection_only": false,
+    "max_objects": 500
+  }
+}

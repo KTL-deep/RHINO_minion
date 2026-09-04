@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>RhinoMinion.Plugin</RootNamespace>
+    <AssemblyName>RhinoMinion</AssemblyName>
+    <TargetExt>.rhp</TargetExt>
+    <Version>0.1.0</Version>
+    <Authors>RHINO Minion contributors</Authors>
+    <Description>Controlled AI geometry operations for Rhino 8.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Text.Json" />
+    <ProjectReference Include="..\RhinoMinion.Protocol\RhinoMinion.Protocol.csproj" />
+  </ItemGroup>
+</Project>

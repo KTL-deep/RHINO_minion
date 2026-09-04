@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rhino-minion.local/schemas/tools/create-box.schema.json",
+  "title": "create_box arguments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["origin", "width", "depth", "height"],
+  "properties": {
+    "origin": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "width": { "type": "number", "exclusiveMinimum": 0 },
+    "depth": { "type": "number", "exclusiveMinimum": 0 },
+    "height": { "type": "number", "exclusiveMinimum": 0 },
+    "layer": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 }
+  }
+}

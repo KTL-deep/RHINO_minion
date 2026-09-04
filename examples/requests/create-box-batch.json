@@ -1,0 +1,23 @@
+{
+  "protocol_version": "0.1",
+  "request_id": "44444444-4444-4444-4444-444444444444",
+  "session_id": "22222222-2222-2222-2222-222222222222",
+  "type": "execute_batch",
+  "payload": {
+    "label": "AI: create tower base",
+    "operations": [
+      {
+        "operation_id": "op-1",
+        "tool": "create_box",
+        "arguments": {
+          "origin": [0, 0, 0],
+          "width": 30000,
+          "depth": 20000,
+          "height": 80000,
+          "layer": "AI::Massing",
+          "name": "Tower_Base"
+        }
+      }
+    ]
+  }
+}

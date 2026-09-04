@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rhino-minion.local/schemas/protocol/bridge-request.schema.json",
+  "title": "Bridge request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol_version", "request_id", "session_id", "type", "payload"],
+  "properties": {
+    "protocol_version": { "const": "0.1" },
+    "request_id": { "type": "string", "format": "uuid" },
+    "session_id": { "type": "string", "format": "uuid" },
+    "type": { "enum": ["handshake", "get_scene", "execute_batch"] },
+    "payload": { "type": "object" }
+  }
+}

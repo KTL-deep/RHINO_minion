@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "transform arguments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["object_ids", "kind"],
+  "properties": {
+    "object_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "format": "uuid" } },
+    "kind": { "enum": ["move", "rotate", "scale"] },
+    "vector": { "$ref": "#/$defs/vector" },
+    "center": { "$ref": "#/$defs/vector" },
+    "axis": { "$ref": "#/$defs/vector" },
+    "angle_degrees": { "type": "number" },
+    "factor": { "type": "number", "exclusiveMinimum": 0 },
+    "copy": { "type": "boolean", "default": false }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

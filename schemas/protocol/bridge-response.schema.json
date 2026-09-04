@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rhino-minion.local/schemas/protocol/bridge-response.schema.json",
+  "title": "Bridge response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "ok"],
+  "properties": {
+    "request_id": { "type": "string", "format": "uuid" },
+    "ok": { "type": "boolean" },
+    "result": { "type": ["object", "null"] },
+    "error": {
+      "oneOf": [
+        { "$ref": "error.schema.json" },
+        { "type": "null" }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "ok": { "const": true } } },
+      "then": { "not": { "required": ["error"] } },
+      "else": { "required": ["error"] }
+    }
+  ]
+}
